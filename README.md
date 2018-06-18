@@ -1,2 +1,2 @@
 # exstore
-Extend state container for Javascript applications (React)
+Extend state container for Javascript applications (React,...)

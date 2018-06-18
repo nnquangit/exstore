@@ -1,0 +1,28 @@
+{
+  "name": "exstore",
+  "version": "1.0.0",
+  "description": "Extend state container for Javascript applications (React)",
+  "main": "dist/exstore.cjs.js",
+  "module": "dist/exstore.esm.js",
+  "browser": "dist/exstore.umd.js",
+  "dependencies": {
+    "ms": "^2.0.0",
+    "rxjs": "^6.2.1"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "rollup": "^0.60.0",
+    "rollup-plugin-commonjs": "^9.1.0",
+    "rollup-plugin-node-resolve": "^3.0.0"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "mocha",
+    "pretest": "npm run build"
+  },
+  "files": [
+    "dist"
+  ]
+}

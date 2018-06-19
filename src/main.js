@@ -1,4 +1,5 @@
 import * as Rx from "rxjs";
+import React from 'react';
 
 const subject = new Rx.Subject();
 
@@ -132,4 +133,31 @@ export function attachServices(services) {
     Object.assign(_data.services, services)
 
     return _store;
+}
+
+export const connectReact = (mapToProps = {}) => {
+    const _store = getStore();
+    const _data = _store.data;
+
+    if (!_store.data) {
+        throw "Store did not created ! Run createStore before use connect";
+    }
+
+    return (WrappedComponent) => {
+        return class extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = mapToProps(_data)
+                this.trigger = _store.subscribe((msg) => this.setState(mapToProps(_data)))
+            }
+
+            componentWillUnmount() {
+                this.trigger.unsubscribe()
+            }
+
+            render() {
+                return <WrappedComponent {...this.state}/>;
+            }
+        };
+    }
 }

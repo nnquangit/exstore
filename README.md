@@ -3,7 +3,7 @@ Extend store container for Javascript applications (React,...)
 
 # Basic Usage
 ```javascript
-import {createStore, getStore, attachServices, getServices} from 'exstore'
+import {createStore, getStore, attachServices, getServices, getStateCapture} from 'exstore'
 import axios from 'axios'
 import Cookies from 'js-cookie'
  
@@ -49,44 +49,16 @@ const store = createStore(modules, [persitPlugins, logPlugins]).attachServices({
 attachServices({$storage})
  
 //Listen for change
-store.subscribe((msg) => this.setState(mapToProps(_data)))
+store.subscribe((msg) => console.log(getStateCapture()))
  
 //Call action
-store.actions.increase()
- 
+store.data.actions.increase()
 ```
 
 # Usage with react
 ```javascript
 import React from 'react';
-import {createStore, getStore, attachServices, getServices} from 'exstore'
- 
-const connect = (mapToProps = {}) => {
-    const _store = getStore();
-    const _data = _store.data;
-    
-    if (!_store.data) {
-     throw "Store did not created ! Run createStore before use connect";
-    }
-    
-    return (WrappedComponent) => {
-        return class extends React.Component {
-           constructor(props) {
-               super(props);
-               this.state = mapToProps(_data)
-               this.trigger = _store.subscribe((msg) => this.setState(mapToProps(_data)))
-           }
-           
-           componentWillUnmount() {
-               this.trigger.unsubscribe()
-           }
-           
-           render() {
-            return <WrappedComponent {...this.state}/>;
-           }
-       };
-    }
-}
+import {createStore, getStore, attachServices, getServices, connectReact as connect} from 'exstore'
  
 class HomePage extends React.Component {
     constructor(props) {

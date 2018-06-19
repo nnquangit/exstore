@@ -1,6 +1,6 @@
 {
   "name": "exstore",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Extend state container for Javascript applications (React)",
   "main": "dist/exstore.cjs.js",
   "module": "dist/exstore.esm.js",

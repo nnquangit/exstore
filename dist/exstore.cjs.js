@@ -4494,8 +4494,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
 var subject = new Subject();
 
 function getStore() {
@@ -4538,8 +4536,8 @@ function replaceState(state) {
     return _store;
 }
 
-function createStore(mods) {
-    var plugins = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+function createStore(mods, services) {
+    var plugins = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
     var _store = getStore();
 
@@ -4548,27 +4546,28 @@ function createStore(mods) {
         services: {}, plugins: []
     };
 
-    if (plugins.length) {
-        _store.data.plugins = [].concat(_toConsumableArray(_store.data.plugins), _toConsumableArray(plugins));
-    }
-
     _store.getState = getState;
     _store.getStateCapture = getStateCapture;
     _store.replaceState = replaceState;
-    _store.attachModdules = attachModdules;
+    _store.attachModules = attachModules;
     _store.getServices = getServices;
     _store.attachServices = attachServices;
+    _store.attachPlugins = attachPlugins;
 
-    _store.attachModdules(mods);
+    _store.attachModules(mods);
 
-    _store.data.plugins.map(function (plugin) {
-        return plugin(_store);
-    });
+    if (typeof services === 'Object') {
+        _store.attachServices(services);
+    }
+
+    if (plugins.length) {
+        _store.attachPlugins(plugins);
+    }
 
     return _store;
 }
 
-function attachModdules(modules) {
+function attachModules(modules) {
     var _store = getStore();
     var _data = _store.data;
 
@@ -4637,6 +4636,24 @@ function attachServices(services) {
     return _store;
 }
 
+function attachPlugins(plugins) {
+    var _store = getStore();
+    var _data = _store.data;
+
+    if (!_store.data) {
+        throw "Store did not created ! Run createStore before use attachServices";
+    }
+
+    if (plugins.length) {
+        plugins.map(function (plugin) {
+            _data.plugins.push(plugin);
+            plugin(_store);
+        });
+    }
+
+    return _store;
+}
+
 var connectReact = function connectReact() {
     var mapToProps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -4671,7 +4688,8 @@ var connectReact = function connectReact() {
             }, {
                 key: "render",
                 value: function render() {
-                    return react.createElement(WrappedComponent, this.state);
+                    return;
+                    react.createElement(WrappedComponent, this.state);
                 }
             }]);
 
@@ -4685,7 +4703,8 @@ exports.getState = getState;
 exports.getStateCapture = getStateCapture;
 exports.replaceState = replaceState;
 exports.createStore = createStore;
-exports.attachModdules = attachModdules;
+exports.attachModules = attachModules;
 exports.getServices = getServices;
 exports.attachServices = attachServices;
+exports.attachPlugins = attachPlugins;
 exports.connectReact = connectReact;

@@ -43,7 +43,7 @@ export function replaceState(state) {
     return _store;
 }
 
-export function createStore(mods, plugins = []) {
+export function createStore(mods, services, plugins = []) {
     const _store = getStore();
 
     _store.data = {
@@ -51,25 +51,28 @@ export function createStore(mods, plugins = []) {
         services: {}, plugins: []
     }
 
-    if (plugins.length) {
-        _store.data.plugins = [..._store.data.plugins, ...plugins]
-    }
-
     _store.getState = getState;
     _store.getStateCapture = getStateCapture;
     _store.replaceState = replaceState;
-    _store.attachModdules = attachModdules;
+    _store.attachModules = attachModules;
     _store.getServices = getServices;
     _store.attachServices = attachServices;
+    _store.attachPlugins = attachPlugins;
 
-    _store.attachModdules(mods)
+    _store.attachModules(mods)
 
-    _store.data.plugins.map(plugin => plugin(_store))
+    if (typeof services === 'Object') {
+        _store.attachServices(services)
+    }
+
+    if (plugins.length) {
+        _store.attachPlugins(plugins)
+    }
 
     return _store;
 }
 
-export function attachModdules(modules) {
+export function attachModules(modules) {
     const _store = getStore();
     const _data = _store.data;
 
@@ -135,6 +138,25 @@ export function attachServices(services) {
     return _store;
 }
 
+
+export function attachPlugins(plugins) {
+    const _store = getStore();
+    const _data = _store.data;
+
+    if (!_store.data) {
+        throw "Store did not created ! Run createStore before use attachServices";
+    }
+
+    if (plugins.length) {
+        plugins.map(plugin => {
+            _data.plugins.push(plugin)
+            plugin(_store)
+        })
+    }
+
+    return _store;
+}
+
 export const connectReact = (mapToProps = {}) => {
     const _store = getStore();
     const _data = _store.data;
@@ -156,7 +178,13 @@ export const connectReact = (mapToProps = {}) => {
             }
 
             render() {
-                return <WrappedComponent {...this.state}/>;
+                return
+            <
+                WrappedComponent
+                {...
+                    this.state
+                }
+                />;
             }
         };
     }

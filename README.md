@@ -32,19 +32,21 @@ const modules = {
 };
   
 const persitPlugins = (_store) => {
+    let {$storage: _$storage} = _store.getServices()
+ 
     //Call end of createStore
-    _store.data.state = {..._store.data.state, more: $storage.setItem('key')}
+    _store.data.state = {..._store.data.state, more: _$storage.setItem('key')}
     
     //Trigger for change state
     _store.subscribe((msg) => {
-        let {$storage: _$storage} = _store.getServices()
         let {more} = _store.getStateCapture()
         _$storage.setItem('key', more)
     }))
 }
+ 
 const logPlugins = (_store) => _store.subscribe((msg) => console.log(msg))
   
-const store = createStore(modules, [persitPlugins, logPlugins]).attachServices({$api})
+const store = createStore(modules, {$api}, [persitPlugins, logPlugins])
 //or
 attachServices({$storage})
  
@@ -58,7 +60,7 @@ store.data.actions.increase()
 # Usage with react
 ```javascript
 import React from 'react';
-import {createStore, getStore, attachServices, getServices, connectReact as connect} from 'exstore'
+import {connectReact as connect} from 'exstore'
  
 class HomePage extends React.Component {
     constructor(props) {

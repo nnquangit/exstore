@@ -30,12 +30,7 @@ describe('ExStore test', function () {
     let store;
 
     beforeEach(function () {
-        store = createStore(modules).attachServices({
-            $api: {
-                get: (url) => console.log('$api get ', url),
-                post: (url, data) => console.log('$api post ', url, data),
-            }
-        })
+        store = createStore(modules)
     });
 
     it('Call actions increase', function () {

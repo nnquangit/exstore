@@ -44,12 +44,16 @@ const persitPlugins = (_store) => {
 }
 const logPlugins = (_store) => _store.subscribe((msg) => console.log(msg))
   
-const store = createStore(modules,[persitPlugins,logPlugins]).attachServices({$api})
+const store = createStore(modules, [persitPlugins, logPlugins]).attachServices({$api})
 //or
 attachServices({$storage})
  
 //Listen for change
-store.subscribe((msg) => this.setState(mapToProps(_data)))        
+store.subscribe((msg) => this.setState(mapToProps(_data)))
+ 
+//Call action
+store.actions.increase()
+ 
 ```
 
 # Usage with react

@@ -90,7 +90,7 @@ class HomePage extends React.Component {
     }
 
     render() {
-        let {current} = this.props;
+        let {current, increase, decrease} = this.props;
 
         return (<div>
             Counter is {current()}

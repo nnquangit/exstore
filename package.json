@@ -6,7 +6,6 @@
   "module": "dist/exstore.esm.js",
   "browser": "dist/exstore.umd.js",
   "dependencies": {
-    "ms": "^2.0.0",
     "rxjs": "^6.2.1"
   },
   "devDependencies": {

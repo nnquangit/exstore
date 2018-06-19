@@ -58,6 +58,7 @@ export function createStore(mods, plugins = []) {
     _store.getStateCapture = getStateCapture;
     _store.replaceState = replaceState;
     _store.attachModdules = attachModdules;
+    _store.getServices = getServices;
     _store.attachServices = attachServices;
 
     _store.attachModdules(mods)
@@ -107,6 +108,17 @@ export function attachModdules(modules) {
     })
 
     return _store;
+}
+
+export function getServices(services) {
+    const _store = getStore();
+    const _data = _store.data;
+
+    if (!_store.data) {
+        throw "Store did not created ! Run createStore before use attachServices";
+    }
+
+    return _data.services;
 }
 
 export function attachServices(services) {

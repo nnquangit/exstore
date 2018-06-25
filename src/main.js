@@ -1,111 +1,115 @@
 import * as Rx from "rxjs";
 import React from 'react';
 
-const subject = new Rx.Subject();
+const store = new Rx.Subject();
+Object.assign(store, {
+    state: {}, actions: {}, mutations: {}, getters: {},
+    services: {}, plugins: [], middlewares: []
+});
+store.attachModules = attachModules;
+//State
+store.getState = getState;
+store.getStateCapture = getStateCapture;
+store.replaceState = replaceState;
+//Services
+store.getServices = getServices;
+store.attachServices = attachServices;
+//Plugins
+store.attachPlugins = attachPlugins;
+//Middlewares
+store.attachMiddlewares = attachMiddlewares;
+store.applyMiddlewares = applyMiddlewares;
+store.runMiddlewares = runMiddlewares;
 
 export function getStore() {
-    return subject
+    return store
 }
 
 export function getState() {
-    const _store = getStore();
-    const _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use getState";
-    }
-
-    return _data.state;
+    return getStore().state;
 }
 
 export function getStateCapture() {
-    const _store = getStore();
-    const _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use getStateCapture";
-    }
-
-    return JSON.parse(JSON.stringify(_data.state));
+    return JSON.parse(JSON.stringify(getStore().state));
 }
 
 export function replaceState(state) {
     const _store = getStore();
-    const _data = _store.data;
 
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use replaceState";
-    }
-
-    _data.state = {...state}
-    subject.next({event: 'state:replace', state: _store.getStateCapture()})
+    _store.state = {...state}
+    _store.next({mutation: 'state:replace', state: _store.getStateCapture()})
 
     return _store;
 }
 
-export function createStore(mods, services, plugins = []) {
+export function createStore({modules, services, plugins, middlewares}) {
     const _store = getStore();
 
-    _store.data = {
-        state: {}, actions: {}, events: {}, getters: {},
-        services: {}, plugins: []
+    if (modules) {
+        _store.attachModules(modules)
     }
 
-    _store.getState = getState;
-    _store.getStateCapture = getStateCapture;
-    _store.replaceState = replaceState;
-    _store.attachModules = attachModules;
-    _store.getServices = getServices;
-    _store.attachServices = attachServices;
-    _store.attachPlugins = attachPlugins;
-
-    _store.attachModules(mods)
-
-    if (typeof services === 'Object') {
+    if (services) {
         _store.attachServices(services)
     }
 
-    if (plugins.length) {
+    if (plugins) {
         _store.attachPlugins(plugins)
     }
 
+    if (middlewares) {
+        _store.attachMiddlewares(middlewares)
+    }
+
     return _store;
+}
+
+export function applyMiddlewares() {
+    const _store = getStore();
+
+    _store.runMiddlewares(_store.middlewares)
+}
+
+export function runMiddlewares(middlewares) {
+    if (!middlewares.length) {
+        return
+    }
+
+    return () => middlewares[0](getStore(), middlewares[1]
+        ? runMiddlewares(middlewares.slice(1))
+        : () => ({})
+    )
 }
 
 export function attachModules(modules) {
     const _store = getStore();
-    const _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachModdules";
-    }
 
     Object.keys(modules).map((module) => {
 
-        _data.state[module] = {...modules[module].state};
+        _store.state[module] = {...modules[module].state};
 
-        if (modules[module].events) {
-            Object.keys(modules[module].events).map(event => {
-                _data.events[event] = (payload) => {
-                    modules[module].events[event](_data.state[module], payload)
-                    subject.next({event: event, state: _store.getStateCapture()})
+        if (modules[module].mutations) {
+            Object.keys(modules[module].mutations).map(mutation => {
+                _store.mutations[mutation] = (payload) => {
+                    modules[module].mutations[mutation](_store.state[module], payload)
+                    _store.next({mutation: mutation, state: _store.getStateCapture()})
                 }
             })
         }
         if (modules[module].getters) {
             Object.keys(modules[module].getters).map(k => {
-                _data.getters[k] = (payload) => modules[module].getters[k](
-                    {..._data.state[module]},
+                _store.getters[k] = (payload) => modules[module].getters[k](
+                    {..._store.state[module]},
                     payload
                 )
             })
         }
         if (modules[module].actions) {
             Object.keys(modules[module].actions).map(k => {
-                _data.actions[k] = (payload) => modules[module].actions[k]({
-                    commit: (event, payloads) => _data.events[event](payloads),
-                    state: {..._data.state[module]},
-                    rootState: {..._data, state: _store.getStateCapture()}
+                _store.actions[k] = (payload) => modules[module].actions[k]({
+                    store: _store,
+                    state: {..._store.state[module]},
+                    commit: (mutation, payloads) => _store.mutations[mutation](payloads)
                 }, payload)
             })
         }
@@ -114,42 +118,24 @@ export function attachModules(modules) {
     return _store;
 }
 
-export function getServices(services) {
-    const _store = getStore();
-    const _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachServices";
-    }
-
-    return _data.services;
+export function getServices() {
+    return getStore().services;
 }
 
 export function attachServices(services) {
     const _store = getStore();
-    const _data = _store.data;
 
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachServices";
-    }
-
-    Object.assign(_data.services, services)
+    Object.assign(_store.services, services)
 
     return _store;
 }
 
-
 export function attachPlugins(plugins) {
     const _store = getStore();
-    const _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachServices";
-    }
 
     if (plugins.length) {
         plugins.map(plugin => {
-            _data.plugins.push(plugin)
+            _store.plugins.push(plugin)
             plugin(_store)
         })
     }
@@ -157,35 +143,34 @@ export function attachPlugins(plugins) {
     return _store;
 }
 
-export const connectReact = (mapToProps = {}) => {
+export function attachMiddlewares(middlewares) {
     const _store = getStore();
-    const _data = _store.data;
 
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use connect";
+    if (middlewares.length) {
+        _store.middlewares = [...middlewares, ..._store.middlewares]
     }
+
+    return _store;
+}
+
+export function connectReact(mapToProps = {}) {
+    const _store = getStore();
 
     return (WrappedComponent) => {
         return class extends React.Component {
             constructor(props) {
                 super(props);
-                this.state = mapToProps(_data)
-                this.trigger = _store.subscribe((msg) => this.setState(mapToProps(_data)))
+                this.state = mapToProps(_store)
+                this.subscribe = _store.subscribe((msg) => this.setState(mapToProps(_store)))
             }
 
             componentWillUnmount() {
-                this.trigger.unsubscribe()
+                this.subscribe.unsubscribe()
             }
 
             render() {
-                return
-            <
-                WrappedComponent
-                {...
-                    this.state
-                }
-                />;
+                return <WrappedComponent {...this.props} {...this.state}/>;
             }
-        };
+        }
     }
 }

@@ -1,16 +1,16 @@
 # exstore
-Extend store container for Javascript applications (React,...)
+App container for Javascript applications with Built in state management pattern, Service layer pattern (React, ...)
 
 # Basic Usage
 ```javascript
-import {createStore, getStore, attachServices, getServices, getStateCapture} from 'exstore'
+import {createStore} from 'exstore'
 import axios from 'axios'
 import Cookies from 'js-cookie'
  
 const $api = axios.create()
 const $storage = {
     getItem: key => Cookies.get(key),
-    setItem: (key, value) => Cookies.set(key, value, { expires: 3, secure: true }),
+    setItem: (key, value) => Cookies.set(key, value, {expires: 3, secure: true}),
     removeItem: key => Cookies.remove(key)
 }
  
@@ -21,7 +21,7 @@ const modules = {
             increase: ({state, commit}) => commit('COUNTER_INCREASE'),
             decrease: ({state, commit}) => commit('COUNTER_DECREASE')
         },
-        events: {
+        mutations: {
             'COUNTER_INCREASE': (state) => state.current += 1,
             'COUNTER_DECREASE': (state) => state.current -= 1,
         },
@@ -30,31 +30,28 @@ const modules = {
         },
     }
 };
-  
+ 
 const persitPlugins = (_store) => {
-    let {$storage: _$storage} = _store.getServices()
- 
-    //Call end of createStore
-    _store.data.state = {..._store.data.state, more: _$storage.setItem('key')}
-    
-    //Trigger for change state
-    _store.subscribe((msg) => {
-        let {more} = _store.getStateCapture()
-        _$storage.setItem('key', more)
-    }))
+    let {$cookies} = _store.getServices()
+    let saved = $cookies.getItem('storekey');
+
+    if (saved) {
+        _store.replaceState({..._store.getState(), auth: JSON.parse(saved)})
+    }
+
+    _store.subscribe((msg) => $cookies.setItem('storekey', JSON.stringify(_store.getState().auth)))
 }
- 
 const logPlugins = (_store) => _store.subscribe((msg) => console.log(msg))
-  
-const store = createStore(modules, {$api}, [persitPlugins, logPlugins])
-//or
-attachServices({$storage})
+ 
+const store = createStore({modules})
+    .attachPlugins([persitPlugins, logPlugins])
+    .attachServices({$api, $storage})
  
 //Listen for change
 store.subscribe((msg) => console.log(getStateCapture()))
  
 //Call action
-store.data.actions.increase()
+store.actions.increase()
 ```
 
 # Usage with react
@@ -80,3 +77,7 @@ class HomePage extends React.Component {
 
 export const Home = connect(({state, actions, getters}) => ({...state, ...actions, ...getters}))(HomePage)
 ```
+
+## Tools
+- [exstore-devtools](https://github.com/nnquangit/exstore-devtools) Devtools for exstore (coming soon)
+- [react-ssr-jest](https://github.com/nnquangit/react-ssr-jest) Reactjs starter kit for ssr with webpack 4, exstore,...

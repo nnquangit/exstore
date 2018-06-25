@@ -4494,115 +4494,125 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var subject = new Subject();
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var store = new Subject();
+Object.assign(store, {
+    state: {}, actions: {}, mutations: {}, getters: {},
+    services: {}, plugins: [], middlewares: []
+});
+store.attachModules = attachModules;
+//State
+store.getState = getState;
+store.getStateCapture = getStateCapture;
+store.replaceState = replaceState;
+//Services
+store.getServices = getServices;
+store.attachServices = attachServices;
+//Plugins
+store.attachPlugins = attachPlugins;
+//Middlewares
+store.attachMiddlewares = attachMiddlewares;
+store.applyMiddlewares = applyMiddlewares;
+store.runMiddlewares = runMiddlewares;
 
 function getStore() {
-    return subject;
+    return store;
 }
 
 function getState() {
-    var _store = getStore();
-    var _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use getState";
-    }
-
-    return _data.state;
+    return getStore().state;
 }
 
 function getStateCapture() {
-    var _store = getStore();
-    var _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use getStateCapture";
-    }
-
-    return JSON.parse(JSON.stringify(_data.state));
+    return JSON.parse(JSON.stringify(getStore().state));
 }
 
 function replaceState(state) {
     var _store = getStore();
-    var _data = _store.data;
 
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use replaceState";
-    }
-
-    _data.state = _extends({}, state);
-    subject.next({ event: 'state:replace', state: _store.getStateCapture() });
+    _store.state = _extends({}, state);
+    _store.next({ mutation: 'state:replace', state: _store.getStateCapture() });
 
     return _store;
 }
 
-function createStore(mods, services) {
-    var plugins = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+function createStore(_ref) {
+    var modules = _ref.modules,
+        services = _ref.services,
+        plugins = _ref.plugins,
+        middlewares = _ref.middlewares;
 
     var _store = getStore();
 
-    _store.data = {
-        state: {}, actions: {}, events: {}, getters: {},
-        services: {}, plugins: []
-    };
+    if (modules) {
+        _store.attachModules(modules);
+    }
 
-    _store.getState = getState;
-    _store.getStateCapture = getStateCapture;
-    _store.replaceState = replaceState;
-    _store.attachModules = attachModules;
-    _store.getServices = getServices;
-    _store.attachServices = attachServices;
-    _store.attachPlugins = attachPlugins;
-
-    _store.attachModules(mods);
-
-    if (typeof services === 'Object') {
+    if (services) {
         _store.attachServices(services);
     }
 
-    if (plugins.length) {
+    if (plugins) {
         _store.attachPlugins(plugins);
     }
 
+    if (middlewares) {
+        _store.attachMiddlewares(middlewares);
+    }
+
     return _store;
+}
+
+function applyMiddlewares() {
+    var _store = getStore();
+
+    _store.runMiddlewares(_store.middlewares);
+}
+
+function runMiddlewares(middlewares) {
+    if (!middlewares.length) {
+        return;
+    }
+
+    return function () {
+        return middlewares[0](getStore(), middlewares[1] ? runMiddlewares(middlewares.slice(1)) : function () {
+            return {};
+        });
+    };
 }
 
 function attachModules(modules) {
     var _store = getStore();
-    var _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachModdules";
-    }
 
     Object.keys(modules).map(function (module) {
 
-        _data.state[module] = _extends({}, modules[module].state);
+        _store.state[module] = _extends({}, modules[module].state);
 
-        if (modules[module].events) {
-            Object.keys(modules[module].events).map(function (event) {
-                _data.events[event] = function (payload) {
-                    modules[module].events[event](_data.state[module], payload);
-                    subject.next({ event: event, state: _store.getStateCapture() });
+        if (modules[module].mutations) {
+            Object.keys(modules[module].mutations).map(function (mutation) {
+                _store.mutations[mutation] = function (payload) {
+                    modules[module].mutations[mutation](_store.state[module], payload);
+                    _store.next({ mutation: mutation, state: _store.getStateCapture() });
                 };
             });
         }
         if (modules[module].getters) {
             Object.keys(modules[module].getters).map(function (k) {
-                _data.getters[k] = function (payload) {
-                    return modules[module].getters[k](_extends({}, _data.state[module]), payload);
+                _store.getters[k] = function (payload) {
+                    return modules[module].getters[k](_extends({}, _store.state[module]), payload);
                 };
             });
         }
         if (modules[module].actions) {
             Object.keys(modules[module].actions).map(function (k) {
-                _data.actions[k] = function (payload) {
+                _store.actions[k] = function (payload) {
                     return modules[module].actions[k]({
-                        commit: function commit(event, payloads) {
-                            return _data.events[event](payloads);
-                        },
-                        state: _extends({}, _data.state[module]),
-                        rootState: _extends({}, _data, { state: _store.getStateCapture() })
+                        store: _store,
+                        state: _extends({}, _store.state[module]),
+                        commit: function commit(mutation, payloads) {
+                            return _store.mutations[mutation](payloads);
+                        }
                     }, payload);
                 };
             });
@@ -4612,41 +4622,24 @@ function attachModules(modules) {
     return _store;
 }
 
-function getServices(services) {
-    var _store = getStore();
-    var _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachServices";
-    }
-
-    return _data.services;
+function getServices() {
+    return getStore().services;
 }
 
 function attachServices(services) {
     var _store = getStore();
-    var _data = _store.data;
 
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachServices";
-    }
-
-    Object.assign(_data.services, services);
+    Object.assign(_store.services, services);
 
     return _store;
 }
 
 function attachPlugins(plugins) {
     var _store = getStore();
-    var _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use attachServices";
-    }
 
     if (plugins.length) {
         plugins.map(function (plugin) {
-            _data.plugins.push(plugin);
+            _store.plugins.push(plugin);
             plugin(_store);
         });
     }
@@ -4654,15 +4647,20 @@ function attachPlugins(plugins) {
     return _store;
 }
 
-var connectReact = function connectReact() {
+function attachMiddlewares(middlewares) {
+    var _store = getStore();
+
+    if (middlewares.length) {
+        _store.middlewares = [].concat(_toConsumableArray(middlewares), _toConsumableArray(_store.middlewares));
+    }
+
+    return _store;
+}
+
+function connectReact() {
     var mapToProps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     var _store = getStore();
-    var _data = _store.data;
-
-    if (!_store.data) {
-        throw "Store did not created ! Run createStore before use connect";
-    }
 
     return function (WrappedComponent) {
         return function (_React$Component) {
@@ -4673,38 +4671,40 @@ var connectReact = function connectReact() {
 
                 var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
 
-                _this.state = mapToProps(_data);
-                _this.trigger = _store.subscribe(function (msg) {
-                    return _this.setState(mapToProps(_data));
+                _this.state = mapToProps(_store);
+                _this.subscribe = _store.subscribe(function (msg) {
+                    return _this.setState(mapToProps(_store));
                 });
                 return _this;
             }
 
             _createClass(_class, [{
-                key: "componentWillUnmount",
+                key: 'componentWillUnmount',
                 value: function componentWillUnmount() {
-                    this.trigger.unsubscribe();
+                    this.subscribe.unsubscribe();
                 }
             }, {
-                key: "render",
+                key: 'render',
                 value: function render() {
-                    return;
-                    react.createElement(WrappedComponent, this.state);
+                    return react.createElement(WrappedComponent, _extends({}, this.props, this.state));
                 }
             }]);
 
             return _class;
         }(react.Component);
     };
-};
+}
 
 exports.getStore = getStore;
 exports.getState = getState;
 exports.getStateCapture = getStateCapture;
 exports.replaceState = replaceState;
 exports.createStore = createStore;
+exports.applyMiddlewares = applyMiddlewares;
+exports.runMiddlewares = runMiddlewares;
 exports.attachModules = attachModules;
 exports.getServices = getServices;
 exports.attachServices = attachServices;
 exports.attachPlugins = attachPlugins;
+exports.attachMiddlewares = attachMiddlewares;
 exports.connectReact = connectReact;

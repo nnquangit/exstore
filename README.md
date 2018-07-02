@@ -68,14 +68,23 @@ class HomePage extends React.Component {
         let {current, increase, decrease} = this.props;
 
         return (<div>
-            Counter is {current()}
+            Counter is {current}
             <button type="button" onClick={increase}>+1</button>
             <button type="button" onClick={decrease}>-1</button>
         </div>)
     }
 }
-
-export const Home = connect(({state, actions, getters}) => ({...state, ...actions, ...getters}))(HomePage)
+ 
+const state =  ({getters}) => ({
+  current: getters.current()
+})
+ 
+const actions =  ({actions}) => ({
+  increase: actions.increase,
+  decrease: actions.decrease
+})
+ 
+export const Home = connect(state, actions)(HomePage)
 ```
 
 ## Tools

@@ -4498,20 +4498,25 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 var store = new Subject();
 Object.assign(store, {
-    state: {}, actions: {}, mutations: {}, getters: {},
-    services: {}, plugins: [], middlewares: []
+    state: {},
+    actions: {},
+    mutations: {},
+    getters: {},
+    services: {},
+    plugins: [],
+    middlewares: []
 });
 store.attachModules = attachModules;
-//State
+// State
 store.getState = getState;
 store.getStateCapture = getStateCapture;
 store.replaceState = replaceState;
-//Services
+// Services
 store.getServices = getServices;
 store.attachServices = attachServices;
-//Plugins
+// Plugins
 store.attachPlugins = attachPlugins;
-//Middlewares
+// Middlewares
 store.attachMiddlewares = attachMiddlewares;
 store.applyMiddlewares = applyMiddlewares;
 store.runMiddlewares = runMiddlewares;
@@ -4586,8 +4591,7 @@ function attachModules(modules) {
     var _store = getStore();
 
     Object.keys(modules).map(function (module) {
-
-        _store.state[module] = _extends({}, modules[module].state);
+        _store.state[module] = modules[module].state;
 
         if (modules[module].mutations) {
             Object.keys(modules[module].mutations).map(function (mutation) {
@@ -4600,7 +4604,7 @@ function attachModules(modules) {
         if (modules[module].getters) {
             Object.keys(modules[module].getters).map(function (k) {
                 _store.getters[k] = function (payload) {
-                    return modules[module].getters[k](_extends({}, _store.state[module]), payload);
+                    return modules[module].getters[k](_store.getStateCapture()[module], payload);
                 };
             });
         }
@@ -4609,7 +4613,7 @@ function attachModules(modules) {
                 _store.actions[k] = function (payload) {
                     return modules[module].actions[k]({
                         store: _store,
-                        state: _extends({}, _store.state[module]),
+                        state: _store.getStateCapture()[module],
                         commit: function commit(mutation, payloads) {
                             return _store.mutations[mutation](payloads);
                         }
@@ -4658,7 +4662,12 @@ function attachMiddlewares(middlewares) {
 }
 
 function connectReact() {
-    var mapToProps = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {
+        return {};
+    };
+    var services = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {
+        return {};
+    };
 
     var _store = getStore();
 
@@ -4671,22 +4680,36 @@ function connectReact() {
 
                 var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
 
-                _this.state = mapToProps(_store);
-                _this.subscribe = _store.subscribe(function (msg) {
-                    return _this.setState(mapToProps(_store));
-                });
+                _this.state = { state: state(_store), services: services(_store) };
                 return _this;
             }
 
             _createClass(_class, [{
+                key: 'UNSAFE_componentWillMount',
+                value: function UNSAFE_componentWillMount() {
+                    var _this2 = this;
+
+                    var snapshot = JSON.stringify(this.state.state);
+                    this.subscribe = _store.subscribe(function (msg) {
+                        var newstate = state(_store);
+                        var newsnapshot = JSON.stringify(newstate);
+                        if (snapshot !== newsnapshot) {
+                            snapshot = newsnapshot;
+                            _this2.setState({ state: newstate });
+                        }
+                    });
+                }
+            }, {
                 key: 'componentWillUnmount',
                 value: function componentWillUnmount() {
-                    this.subscribe.unsubscribe();
+                    if (this.subscribe) {
+                        this.subscribe.unsubscribe();
+                    }
                 }
             }, {
                 key: 'render',
                 value: function render() {
-                    return react.createElement(WrappedComponent, _extends({}, this.props, this.state));
+                    return react.createElement(WrappedComponent, _extends({}, this.props, this.state.state, this.state.services));
                 }
             }]);
 

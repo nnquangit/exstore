@@ -35,20 +35,20 @@ const modules = {
 };
  
 const persitPlugins = (_store) => {
-    let {$cookies} = _store.getServices()
-    let saved = $cookies.getItem('storekey');
+    let {$storage} = _store.getServices()
+    let saved = $storage.getItem('storekey');
 
     if (saved) {
         _store.replaceState({..._store.getState(), auth: JSON.parse(saved)})
     }
 
-    _store.subscribe((msg) => $cookies.setItem('storekey', JSON.stringify(_store.getState().auth)))
+    _store.subscribe((msg) => $storage.setItem('storekey', JSON.stringify(_store.getState().auth)))
 }
 const logPlugins = (_store) => _store.subscribe((msg) => console.log(msg))
  
 const store = createStore({modules})
-    .attachPlugins([persitPlugins, logPlugins])
     .attachServices({$api, $storage})
+    .attachPlugins([persitPlugins, logPlugins])
  
 //Listen for change
 store.subscribe((msg) => console.log(getStateCapture()))

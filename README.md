@@ -1,5 +1,5 @@
 # exstore
-App container for Javascript applications with Built in state management pattern, Service layer pattern (React, ...)
+App container for Javascript applications with built in state management, service container use for React,... 
 
 # Basic Usage
 ```javascript

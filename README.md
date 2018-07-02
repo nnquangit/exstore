@@ -1,6 +1,9 @@
 # exstore
 App container for Javascript applications with built in state management, service container use for React,... 
-
+ 
+[![Build Status](https://travis-ci.org/nnquangit/exstore.svg?branch=master)](https://travis-ci.org/nnquangit/exstore)
+[![CircleCI](https://circleci.com/gh/nnquangit/exstore/tree/master.svg?style=svg)](https://circleci.com/gh/nnquangit/exstore/tree/master)
+ 
 # Basic Usage
 ```javascript
 import {createStore} from 'exstore'

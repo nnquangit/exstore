@@ -71,8 +71,8 @@ describe('ExStore vue test', function () {
         expect(() => {
             Vue.use(connectVue)
             new Vue({
-                computed: {...vueGetters(['currentUser', 'isLoggedIn'])},
-                methods: {...vueActions(['signin', 'signout'])},
+                computed: vueGetters(['currentUser', 'isLoggedIn']),
+                methods: vueActions(['signin', 'signout']),
                 template: '<div>{{ hi }}</div>'
             })
         }).to.not.throw();

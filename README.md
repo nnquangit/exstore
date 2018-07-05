@@ -100,8 +100,8 @@ import {connectVue, vueGetters, vueActions} from 'exstore'
 Vue.use(connectVue)
  
 new Vue({
-    computed: {...vueGetters(['currentUser', 'isLoggedIn'])},
-    methods: {...vueActions(['signin', 'signout'])},
+    computed: {...vueGetters(['current'])},
+    methods: {...vueActions(['increase', 'decrease'])},
     template: '<div>{{ hi }}</div>'
 })
 ```

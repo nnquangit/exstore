@@ -14,9 +14,12 @@ and limitations under the License.
 ***************************************************************************** */
 /* global Reflect, Promise */
 
-var extendStatics = Object.setPrototypeOf ||
-    ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-    function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+var extendStatics = function(d, b) {
+    extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return extendStatics(d, b);
+};
 
 function __extends(d, b) {
     extendStatics(d, b);
@@ -2686,6 +2689,258 @@ var ZipBufferIterator = /*@__PURE__*/ (function (_super) {
 
 /** PURE_IMPORTS_START  PURE_IMPORTS_END */
 
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+var defineProperty = function (obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+};
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+};
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
+
+var store = new Subject();
+Object.assign(store, {
+    state: {},
+    actions: {},
+    mutations: {},
+    getters: {},
+    services: {},
+    plugins: [],
+    middlewares: []
+});
+store.attachModules = attachModules;
+// State
+store.getState = getState;
+store.getStateCapture = getStateCapture;
+store.replaceState = replaceState;
+// Services
+store.getServices = getServices;
+store.attachServices = attachServices;
+// Plugins
+store.attachPlugins = attachPlugins;
+// Middlewares
+store.attachMiddlewares = attachMiddlewares;
+store.applyMiddlewares = applyMiddlewares;
+store.runMiddlewares = runMiddlewares;
+
+function getStore() {
+    return store;
+}
+
+function getState() {
+    return getStore().state;
+}
+
+function getStateCapture() {
+    return JSON.parse(JSON.stringify(getStore().state));
+}
+
+function replaceState(state) {
+    var _store = getStore();
+
+    _store.state = _extends({}, state);
+    _store.next({ mutation: 'state:replace', state: _store.getStateCapture() });
+
+    return _store;
+}
+
+function createStore(_ref) {
+    var modules = _ref.modules,
+        services = _ref.services,
+        plugins = _ref.plugins,
+        middlewares = _ref.middlewares;
+
+    var _store = getStore();
+
+    if (modules) {
+        _store.attachModules(modules);
+    }
+
+    if (services) {
+        _store.attachServices(services);
+    }
+
+    if (plugins) {
+        _store.attachPlugins(plugins);
+    }
+
+    if (middlewares) {
+        _store.attachMiddlewares(middlewares);
+    }
+
+    return _store;
+}
+
+function applyMiddlewares() {
+    var _store = getStore();
+
+    _store.runMiddlewares(_store.middlewares);
+}
+
+function runMiddlewares(middlewares) {
+    if (!middlewares.length) {
+        return;
+    }
+
+    return function () {
+        return middlewares[0](getStore(), middlewares[1] ? runMiddlewares(middlewares.slice(1)) : function () {
+            return {};
+        });
+    };
+}
+
+function attachModules(modules) {
+    var _store = getStore();
+
+    Object.keys(modules).map(function (module) {
+        _store.state[module] = modules[module].state;
+
+        if (modules[module].mutations) {
+            Object.keys(modules[module].mutations).map(function (mutation) {
+                _store.mutations[mutation] = function (payload) {
+                    modules[module].mutations[mutation](_store.state[module], payload);
+                    _store.next({ mutation: mutation, state: _store.getStateCapture() });
+                };
+            });
+        }
+        if (modules[module].getters) {
+            Object.keys(modules[module].getters).map(function (k) {
+                _store.getters[k] = function (payload) {
+                    return modules[module].getters[k](_store.getStateCapture()[module], payload);
+                };
+            });
+        }
+        if (modules[module].actions) {
+            Object.keys(modules[module].actions).map(function (k) {
+                _store.actions[k] = function (payload) {
+                    return modules[module].actions[k]({
+                        store: _store,
+                        state: _store.getStateCapture()[module],
+                        commit: function commit(mutation, payloads) {
+                            return _store.mutations[mutation](payloads);
+                        }
+                    }, payload);
+                };
+            });
+        }
+    });
+
+    return _store;
+}
+
+function getServices() {
+    return getStore().services;
+}
+
+function attachServices(services) {
+    var _store = getStore();
+
+    Object.assign(_store.services, services);
+
+    return _store;
+}
+
+function attachPlugins(plugins) {
+    var _store = getStore();
+
+    if (plugins.length) {
+        plugins.map(function (plugin) {
+            _store.plugins.push(plugin);
+            plugin(_store);
+        });
+    }
+
+    return _store;
+}
+
+function attachMiddlewares(middlewares) {
+    var _store = getStore();
+
+    if (middlewares.length) {
+        _store.middlewares = [].concat(toConsumableArray(middlewares), toConsumableArray(_store.middlewares));
+    }
+
+    return _store;
+}
+
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
@@ -2958,11 +3213,24 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 var ReactPropTypesSecret_1 = ReactPropTypesSecret;
 
+var printWarning$1 = function() {};
+
 if (process.env.NODE_ENV !== 'production') {
-  var invariant$1 = invariant_1;
-  var warning$1 = warning_1;
   var ReactPropTypesSecret$1 = ReactPropTypesSecret_1;
   var loggedTypeFailures = {};
+
+  printWarning$1 = function(text) {
+    var message = 'Warning: ' + text;
+    if (typeof console !== 'undefined') {
+      console.error(message);
+    }
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
 }
 
 /**
@@ -2987,12 +3255,29 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
         try {
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
-          invariant$1(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
+          if (typeof typeSpecs[typeSpecName] !== 'function') {
+            var err = Error(
+              (componentName || 'React class') + ': ' + location + ' type `' + typeSpecName + '` is invalid; ' +
+              'it must be a function, usually from the `prop-types` package, but received `' + typeof typeSpecs[typeSpecName] + '`.'
+            );
+            err.name = 'Invariant Violation';
+            throw err;
+          }
           error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret$1);
         } catch (ex) {
           error = ex;
         }
-        warning$1(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+        if (error && !(error instanceof Error)) {
+          printWarning$1(
+            (componentName || 'React class') + ': type specification of ' +
+            location + ' `' + typeSpecName + '` is invalid; the type checker ' +
+            'function must return `null` or an `Error` but returned a ' + typeof error + '. ' +
+            'You may have forgotten to pass an argument to the type checker ' +
+            'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
+            'shape all require an argument).'
+          );
+
+        }
         if (error instanceof Error && !(error.message in loggedTypeFailures)) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
@@ -3000,7 +3285,9 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 
           var stack = getStack ? getStack() : '';
 
-          warning$1(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+          printWarning$1(
+            'Failed ' + location + ' type: ' + error.message + (stack != null ? stack : '')
+          );
         }
       }
     }
@@ -4480,183 +4767,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-var store = new Subject();
-Object.assign(store, {
-    state: {},
-    actions: {},
-    mutations: {},
-    getters: {},
-    services: {},
-    plugins: [],
-    middlewares: []
-});
-store.attachModules = attachModules;
-// State
-store.getState = getState;
-store.getStateCapture = getStateCapture;
-store.replaceState = replaceState;
-// Services
-store.getServices = getServices;
-store.attachServices = attachServices;
-// Plugins
-store.attachPlugins = attachPlugins;
-// Middlewares
-store.attachMiddlewares = attachMiddlewares;
-store.applyMiddlewares = applyMiddlewares;
-store.runMiddlewares = runMiddlewares;
-
-function getStore() {
-    return store;
-}
-
-function getState() {
-    return getStore().state;
-}
-
-function getStateCapture() {
-    return JSON.parse(JSON.stringify(getStore().state));
-}
-
-function replaceState(state) {
-    var _store = getStore();
-
-    _store.state = _extends({}, state);
-    _store.next({ mutation: 'state:replace', state: _store.getStateCapture() });
-
-    return _store;
-}
-
-function createStore(_ref) {
-    var modules = _ref.modules,
-        services = _ref.services,
-        plugins = _ref.plugins,
-        middlewares = _ref.middlewares;
-
-    var _store = getStore();
-
-    if (modules) {
-        _store.attachModules(modules);
-    }
-
-    if (services) {
-        _store.attachServices(services);
-    }
-
-    if (plugins) {
-        _store.attachPlugins(plugins);
-    }
-
-    if (middlewares) {
-        _store.attachMiddlewares(middlewares);
-    }
-
-    return _store;
-}
-
-function applyMiddlewares() {
-    var _store = getStore();
-
-    _store.runMiddlewares(_store.middlewares);
-}
-
-function runMiddlewares(middlewares) {
-    if (!middlewares.length) {
-        return;
-    }
-
-    return function () {
-        return middlewares[0](getStore(), middlewares[1] ? runMiddlewares(middlewares.slice(1)) : function () {
-            return {};
-        });
-    };
-}
-
-function attachModules(modules) {
-    var _store = getStore();
-
-    Object.keys(modules).map(function (module) {
-        _store.state[module] = modules[module].state;
-
-        if (modules[module].mutations) {
-            Object.keys(modules[module].mutations).map(function (mutation) {
-                _store.mutations[mutation] = function (payload) {
-                    modules[module].mutations[mutation](_store.state[module], payload);
-                    _store.next({ mutation: mutation, state: _store.getStateCapture() });
-                };
-            });
-        }
-        if (modules[module].getters) {
-            Object.keys(modules[module].getters).map(function (k) {
-                _store.getters[k] = function (payload) {
-                    return modules[module].getters[k](_store.getStateCapture()[module], payload);
-                };
-            });
-        }
-        if (modules[module].actions) {
-            Object.keys(modules[module].actions).map(function (k) {
-                _store.actions[k] = function (payload) {
-                    return modules[module].actions[k]({
-                        store: _store,
-                        state: _store.getStateCapture()[module],
-                        commit: function commit(mutation, payloads) {
-                            return _store.mutations[mutation](payloads);
-                        }
-                    }, payload);
-                };
-            });
-        }
-    });
-
-    return _store;
-}
-
-function getServices() {
-    return getStore().services;
-}
-
-function attachServices(services) {
-    var _store = getStore();
-
-    Object.assign(_store.services, services);
-
-    return _store;
-}
-
-function attachPlugins(plugins) {
-    var _store = getStore();
-
-    if (plugins.length) {
-        plugins.map(function (plugin) {
-            _store.plugins.push(plugin);
-            plugin(_store);
-        });
-    }
-
-    return _store;
-}
-
-function attachMiddlewares(middlewares) {
-    var _store = getStore();
-
-    if (middlewares.length) {
-        _store.middlewares = [].concat(_toConsumableArray(middlewares), _toConsumableArray(_store.middlewares));
-    }
-
-    return _store;
-}
-
 function connectReact() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {
         return {};
@@ -4669,18 +4779,18 @@ function connectReact() {
 
     return function (WrappedComponent) {
         return function (_React$Component) {
-            _inherits(_class, _React$Component);
+            inherits(_class, _React$Component);
 
             function _class(props) {
-                _classCallCheck(this, _class);
+                classCallCheck(this, _class);
 
-                var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
+                var _this = possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
 
                 _this.state = { state: state(_store), services: services(_store) };
                 return _this;
             }
 
-            _createClass(_class, [{
+            createClass(_class, [{
                 key: 'UNSAFE_componentWillMount',
                 value: function UNSAFE_componentWillMount() {
                     var _this2 = this;
@@ -4708,10 +4818,61 @@ function connectReact() {
                     return react.createElement(WrappedComponent, _extends({}, this.props, this.state.state, this.state.services));
                 }
             }]);
-
             return _class;
         }(react.Component);
     };
 }
 
-export { getStore, getState, getStateCapture, replaceState, createStore, applyMiddlewares, runMiddlewares, attachModules, getServices, attachServices, attachPlugins, attachMiddlewares, connectReact };
+var store$1 = getStore();
+
+var vueActions = function vueActions(keys) {
+    return keys.reduce(function (a, c) {
+        return _extends({}, a, defineProperty({}, c, function (payload) {
+            return this.$store.actions[c](payload);
+        }));
+    }, { storeAction: function storeAction() {
+            return true;
+        } });
+};
+
+var vueGetters = function vueGetters(keys) {
+    return keys.reduce(function (a, c) {
+        return _extends({}, a, defineProperty({}, c, {
+            get: function get$$1() {
+                return this.$store.getters[c](store$1);
+            },
+            set: function set$$1() {
+                return true;
+            }
+        }));
+    }, { storeGetter: { get: function get$$1() {
+                return true;
+            }, set: function set$$1() {
+                return true;
+            } } });
+};
+
+var connectVue = {
+    install: function install(Vue, options) {
+        Vue.mixin({
+            beforeCreate: function beforeCreate() {
+                var $options = this.$options;
+                var $data = $options.data || function () {
+                    return {};
+                };
+
+                var watchStore = $options.computed && !!$options.computed.storeGetter || $options.methods && !!$options.methods.storeAction;
+
+                this.$store = store$1;
+
+                if (watchStore) {
+                    $options.data = function () {
+                        return _extends({}, $data.apply(undefined, arguments), { $$store: store$1 });
+                    };
+                }
+            }
+        });
+    }
+};
+
+export { getStore, getState, getStateCapture, replaceState, createStore, applyMiddlewares, runMiddlewares, attachModules, getServices, attachServices, attachPlugins, attachMiddlewares, connectReact, vueActions, vueGetters, connectVue };

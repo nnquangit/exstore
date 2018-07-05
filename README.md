@@ -34,7 +34,7 @@ const modules = {
     }
 };
  
-const persitPlugins = (_store) => {
+const persit = (_store) => {
     let {$storage} = _store.getServices()
     let saved = $storage.getItem('storekey');
 
@@ -44,11 +44,14 @@ const persitPlugins = (_store) => {
 
     _store.subscribe((msg) => $storage.setItem('storekey', JSON.stringify(_store.getState().auth)))
 }
-const logPlugins = (_store) => _store.subscribe((msg) => console.log(msg))
+const log = (_store) => _store.subscribe((msg) => console.log(msg))
+const remoteControl = (_store) => {//...})
+const remoteDebug = (_store) => {//...})
+const devTool = (_store) => {//...})
  
 const store = createStore({modules})
     .attachServices({$api, $storage})
-    .attachPlugins([persitPlugins, logPlugins])
+    .attachPlugins([persit, log, remoteControl, remoteDebug, devTool])
  
 //Listen for change
 store.subscribe((msg) => console.log(getStateCapture()))
@@ -57,7 +60,7 @@ store.subscribe((msg) => console.log(getStateCapture()))
 store.actions.increase()
 ```
 
-# Usage with react
+# Usage with React.js or Native
 ```javascript
 import React from 'react';
 import {connectReact as connect} from 'exstore'
@@ -90,6 +93,20 @@ const actions =  ({actions}) => ({
 export const Home = connect(state, actions)(HomePage)
 ```
 
+# Usage with Vue.js or Native
+```javascript
+import {connectVue, vueGetters, vueActions} from 'exstore'
+ 
+Vue.use(connectVue)
+ 
+new Vue({
+    computed: {...vueGetters(['currentUser', 'isLoggedIn'])},
+    methods: {...vueActions(['signin', 'signout'])},
+    template: '<div>{{ hi }}</div>'
+})
+```
+
 ## Tools
 - [exstore-devtools](https://github.com/nnquangit/exstore-devtools) Devtools for exstore (coming soon)
-- [react-ssr-jest](https://github.com/nnquangit/react-ssr-jest) Reactjs starter kit for ssr with webpack 4, exstore,...
+- [react-ssr-jest](https://github.com/nnquangit/react-ssr-jest) Reactjs starter kit with exstore, jest, webpack 4, ssr,...
+- [vue-ssr-jest](https://github.com/nnquangit/vue-ssr-jest) Vue 2.x starter kit with exstore, jest, webpack 4, ssr,...

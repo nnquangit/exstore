@@ -1,17 +1,18 @@
 {
   "name": "exstore",
-  "version": "1.0.6",
-  "description": "App container for Javascript applications with built in state management, service container use for React,... ",
+  "version": "1.0.7",
+  "description": "App container for Javascript with built in state management, service management use for React, Vue, ... ",
   "main": "dist/exstore.cjs.js",
   "module": "dist/exstore.esm.js",
   "browser": "dist/exstore.umd.js",
-  "dependencies": {
-    "react": "^16.4.1",
-    "rxjs": "^6.2.1"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "vue": "^2.5.16",
+    "react": "^16.4.1",
+    "rxjs": "^6.2.1",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
+    "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",

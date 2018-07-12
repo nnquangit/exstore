@@ -271,35 +271,41 @@ function connectReact() {
 
     return function (WrappedComponent) {
         return function (_React$Component) {
-            inherits(_class, _React$Component);
+            inherits(_class2, _React$Component);
 
-            function _class(props) {
-                classCallCheck(this, _class);
+            function _class2(props) {
+                classCallCheck(this, _class2);
 
-                var _this = possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
+                var _this = possibleConstructorReturn(this, (_class2.__proto__ || Object.getPrototypeOf(_class2)).call(this, props));
+
+                _this._ismounted = false;
 
                 _this.state = { state: state(_store), services: services(_store) };
+                var snapshot = JSON.stringify(_this.state.state);
+                _this.subscribe = _store.subscribe(function (msg) {
+                    var newstate = state(_store);
+                    var newsnapshot = JSON.stringify(newstate);
+                    if (snapshot !== newsnapshot) {
+                        snapshot = newsnapshot;
+                        if (_this._ismounted) {
+                            _this.setState({ state: newstate });
+                        } else {
+                            _this.state = newstate;
+                        }
+                    }
+                });
                 return _this;
             }
 
-            createClass(_class, [{
-                key: 'UNSAFE_componentWillMount',
-                value: function UNSAFE_componentWillMount() {
-                    var _this2 = this;
-
-                    var snapshot = JSON.stringify(this.state.state);
-                    this.subscribe = _store.subscribe(function (msg) {
-                        var newstate = state(_store);
-                        var newsnapshot = JSON.stringify(newstate);
-                        if (snapshot !== newsnapshot) {
-                            snapshot = newsnapshot;
-                            _this2.setState({ state: newstate });
-                        }
-                    });
+            createClass(_class2, [{
+                key: 'componentDidMount',
+                value: function componentDidMount() {
+                    this._ismounted = true;
                 }
             }, {
                 key: 'componentWillUnmount',
                 value: function componentWillUnmount() {
+                    this._ismounted = false;
                     if (this.subscribe) {
                         this.subscribe.unsubscribe();
                     }
@@ -310,7 +316,7 @@ function connectReact() {
                     return React.createElement(WrappedComponent, _extends({}, this.props, this.state.state, this.state.services));
                 }
             }]);
-            return _class;
+            return _class2;
         }(React.Component);
     };
 }

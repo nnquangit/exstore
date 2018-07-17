@@ -2094,39 +2094,31 @@ function connectReact() {
 
     return function (WrappedComponent) {
         return function (_React$Component) {
-            inherits(_class2, _React$Component);
+            inherits(_class, _React$Component);
 
-            function _class2(props) {
-                classCallCheck(this, _class2);
+            function _class(props) {
+                classCallCheck(this, _class);
 
-                var _this = possibleConstructorReturn(this, (_class2.__proto__ || Object.getPrototypeOf(_class2)).call(this, props));
-
-                _this._ismounted = false;
+                var _this = possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
 
                 _this.state = { state: state(_store), services: services(_store) };
                 var snapshot = JSON.stringify(_this.state.state);
-                _this.subscribe = _store.subscribe(function (msg) {
+                _this.exstore = _store.subscribe(function (msg) {
                     var newstate = state(_store);
                     var newsnapshot = JSON.stringify(newstate);
                     if (snapshot !== newsnapshot) {
                         snapshot = newsnapshot;
-                        _this.updater.enqueueSetState(_this, newstate);
+                        _this.updater.enqueueSetState(_this, { state: newstate });
                     }
                 });
                 return _this;
             }
 
-            createClass(_class2, [{
-                key: 'componentDidMount',
-                value: function componentDidMount() {
-                    this._ismounted = true;
-                }
-            }, {
+            createClass(_class, [{
                 key: 'componentWillUnmount',
                 value: function componentWillUnmount() {
-                    this._ismounted = false;
-                    if (this.subscribe) {
-                        this.subscribe.unsubscribe();
+                    if (this.exstore) {
+                        this.exstore.unsubscribe();
                     }
                 }
             }, {
@@ -2135,7 +2127,7 @@ function connectReact() {
                     return react.createElement(WrappedComponent, _extends({}, this.props, this.state.state, this.state.services));
                 }
             }]);
-            return _class2;
+            return _class;
         }(react.Component);
     };
 }

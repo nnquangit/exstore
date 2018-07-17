@@ -3,13 +3,14 @@ import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
 import pkg from './package.json';
 
-const dep = Object.keys(require('./package').dependencies)
+const dependencies = Object.keys(require('./package').dependencies)
+const devDependencies = Object.keys(require('./package').devDependencies)
 
 export default [
     // browser-friendly UMD build
     {
         input: 'src/main.js',
-        external: dep,
+        external: [...dependencies,...devDependencies],
         output: {
             name: pkg.name,
             file: pkg.browser,
@@ -30,7 +31,7 @@ export default [
     // `file` and `format` for each target)
     {
         input: 'src/main.js',
-        external: dep,
+        external: [...dependencies,...devDependencies],
         output: [
             {file: pkg.main, format: 'cjs'},
             {file: pkg.module, format: 'es'}

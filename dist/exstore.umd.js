@@ -286,11 +286,7 @@
                       var newsnapshot = JSON.stringify(newstate);
                       if (snapshot !== newsnapshot) {
                           snapshot = newsnapshot;
-                          if (_this._ismounted) {
-                              _this.setState({ state: newstate });
-                          } else {
-                              _this.state = newstate;
-                          }
+                          _this.updater.enqueueSetState(_this, newstate);
                       }
                   });
                   return _this;

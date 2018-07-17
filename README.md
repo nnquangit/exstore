@@ -4,6 +4,10 @@ App container for Javascript with state management, service management use for R
 [![Build Status](https://travis-ci.org/nnquangit/exstore.svg?branch=master)](https://travis-ci.org/nnquangit/exstore)
 [![CircleCI](https://circleci.com/gh/nnquangit/exstore/tree/master.svg?style=svg)](https://circleci.com/gh/nnquangit/exstore/tree/master)
  
+# Installation
+```
+npm install exstore --save
+````
 # Basic Usage
 ```javascript
 import {createStore} from 'exstore'

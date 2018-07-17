@@ -17,11 +17,7 @@ export function connectReact(state = () => ({}), services = () => ({})) {
                     let newsnapshot = JSON.stringify(newstate)
                     if (snapshot !== newsnapshot) {
                         snapshot = newsnapshot
-                        if (this._ismounted) {
-                            this.setState({state: newstate})
-                        } else {
-                            this.state = newstate
-                        }
+                        this.updater.enqueueSetState(this, newstate);
                     }
                 })
             }

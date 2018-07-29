@@ -102,7 +102,7 @@ export function attachModules(modules) {
         if (modules[module].getters) {
             Object.keys(modules[module].getters).map(k => {
                 _store.getters[k] = (payload) => modules[module].getters[k](
-                    _store.getStateCapture()[module],
+                    _store.state[module],
                     payload
                 )
             })
@@ -111,7 +111,7 @@ export function attachModules(modules) {
             Object.keys(modules[module].actions).map(k => {
                 _store.actions[k] = (payload) => modules[module].actions[k]({
                     store: _store,
-                    state: _store.getStateCapture()[module],
+                    state: _store.state[module],
                     commit: (mutation, payloads) => _store.mutations[mutation](payloads)
                 }, payload)
             })

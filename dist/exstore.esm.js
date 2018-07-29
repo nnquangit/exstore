@@ -196,7 +196,7 @@ function attachModules(modules) {
         if (modules[module].getters) {
             Object.keys(modules[module].getters).map(function (k) {
                 _store.getters[k] = function (payload) {
-                    return modules[module].getters[k](_store.getStateCapture()[module], payload);
+                    return modules[module].getters[k](_store.state[module], payload);
                 };
             });
         }
@@ -205,7 +205,7 @@ function attachModules(modules) {
                 _store.actions[k] = function (payload) {
                     return modules[module].actions[k]({
                         store: _store,
-                        state: _store.getStateCapture()[module],
+                        state: _store.state[module],
                         commit: function commit(mutation, payloads) {
                             return _store.mutations[mutation](payloads);
                         }

@@ -1,6 +1,6 @@
 {
   "name": "exstore",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "App container for Javascript with state management, service management use for React, Vue,...",
   "main": "dist/exstore.cjs.js",
   "module": "dist/exstore.esm.js",
